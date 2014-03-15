@@ -1,5 +1,4 @@
 
-
 /* ==========================================================================
    Author's custom styles
    ========================================================================== */
@@ -61,7 +60,6 @@ body,
 }
 
 /* Adjust scrolling to account for fixed header */
-#profile:before,
 .bcr-content .bcr-section:before {
     display: block; 
     content: " "; 
@@ -93,18 +91,3 @@ body,
 .bcr-content h2 {
     font-size: 72px;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

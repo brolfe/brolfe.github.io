@@ -14,7 +14,7 @@
             // strip active class from nav bar
             $('ul.nav li').removeClass('active');
             // Animate the scroll
-            $.scrollTo( ev.target.hash, 250 );
+            $("html, body").animate({ scrollTop: 0 }, 250);
         })
     });
 }).call( this, jQuery );
