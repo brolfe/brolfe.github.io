@@ -4,11 +4,58 @@
    Author's custom styles
    ========================================================================== */
 
-.bcr-content h2 {
-    background-color: pink;
+body {
+    background-color: rgb(240, 240, 240);
 }
 
+.jumbotron  {
+    background-color: rgb(220, 220, 220);
+}
 
+.jumbotron img {
+    height: 300px;
+}
+
+.bcr-profile p {
+    font-family: "Courier New", Courier, monospace;
+}
+
+.bcr-profile .bcr-stat {
+    font-weight: bold;
+}
+
+.bcr-content .bcr-section:before {
+    display: block; 
+    content: " "; 
+    margin-top: -50px; 
+    height: 50px; 
+    visibility: hidden; 
+}
+ 
+
+.bcr-content {
+    font-size: 24px;
+}
+
+.bcr-content h4 {
+    font-size: 48px;
+}
+
+.bcr-content h4,
+.bcr-content h2,
+.bcr-content p {
+    padding-left: 20px;
+}
+
+.bcr-content .bcr-header-stripe {
+    font-color: white;
+    background-color: rgb(220, 220, 220);
+    text-transform: uppercase;
+}
+
+.bcr-content h2 {
+    font-size: 72px;
+}
 
 
 
