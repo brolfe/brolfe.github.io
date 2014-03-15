@@ -1,6 +1,3 @@
-# Personal Static Page
+# brolfe.github.io
 
-## Development Instructions
-
-    npm install
-    grunt http-server
+This project hosts the artifacts from other repositories to be hosted on github pages.
