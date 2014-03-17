@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Promises vs Callbacks</title>
+
+    <meta name="description" content="Promises vs Callbacks">
+    <meta name="author" content="Bryant Rolfe">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="components/reveal.js/css/reveal.min.css">
+    <link rel="stylesheet" href="components/reveal.js/css/theme/moon.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="css/monokai.css">
+
+    <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+    <script>
+      document.write( '<link rel="stylesheet" href="components/reveal.js/css/print/' + ( window.location.search.match(
+      /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="components/reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+            <h2>Promises vs Callbacks</h2>
+            <h3>FDS Web Dev Club</h3>
+            <p>Bryant Rolfe</p>
+        </section>
+
+        <section>
+            <h2>Rules of the Road</h2>
+            <ul>
+                <li>Intermediate - Advanced level presentation</li>
+                <li>Familiarity with NodeJS will help</li>
+                <li>Read the code snippets!</li>
+                <li>Expect some brain pain</li>
+                <li class="fragment">It'll be worth it</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Game Plan</h2>
+            <ol>
+                <li class="fragment">Why do I care what promises are?</li>
+                <li class="fragment">Fine, what are they?</li>
+                <li class="fragment">Sweet! Show me how they work!</li>
+                <li class="fragment">OMG! Mind == Shattered</li>
+                <li class="fragment">There's more?! Deep breaths...</li>
+                <li class="fragment">Recovery Time (Q&A)</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Asynchronous Programming --> Callbacks</h3>
+            <p>Call my function when you're done doing your async thing, please.</p>
+            <pre><code class="javascript" data-trim>
+var myAsyncFunction = function(foo, bar, baz, callback){
+    setTimeout(function(){
+        var result = foo + bar + baz;
+        callback(null, result);
+    }, 500);
+};
+// callback signature: callback(err, results)
+            </code></pre>
+            <pre class="fragment"><code class="javascript" data-trim>
+fs.readFile('~/.profile-user',
+    // some time passes...
+    function(err, contents){
+        // now we have the contents!
+    }
+);
+            </code></pre>
+        </section>
+
+        <section>
+            <p>Let's see a more realistic example...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var async = require('async'),
+    fs    = require('fs');
+
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'];
+
+async.map(paths, fs.stat, function(error, results) {
+  // use the stat results
+});
+            </code></pre>
+            <p class="fragment">Not bad, right?</p>
+        </section>
+
+        <section>
+            <p>Until we want to re-use a piece of that information...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'];
+
+async.map(paths, fs.stat, function(error, results) {
+  // use the results
+});
+
+fs.stat(paths[0], function(error, stat) {
+  // use stat.size
+});
+            </code></pre>
+            <p class="fragment">But now we are stat-ing the file twice!</p>
+        </section>
+        
+        <section>
+            <p>Fine, we'll just handle the first one specially...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'];
+
+async.map(paths, fs.stat, function(error, results) {
+  var size = results[0].size;
+  // use size
+  // use the results
+})
+            </code></pre>
+            <p class="fragment">Now our size task is blocking on all those other files!</p>
+        </section>
+
+        <section>
+            <p>Ok. Then we'll just handle that file on its own...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'],
+    file1 = paths.shift();
+
+fs.stat(file1, function(error, stat) {
+  // use stat.size
+  async.map(paths, fs.stat, function(error, results) {
+    results.unshift(stat);
+    // use the results
+  });
+});
+            </code></pre>
+            <p class="fragment">Now all the other files block on the first one. Sad face.</p>
+        </section>
+
+        <section>
+            <p>Last try!</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'],
+    file1 = paths.shift();
+
+async.parallel([
+  function(callback) {
+    fs.stat(file1, function(error, stat) {
+      // use stat.size
+      callback(error, stat);
+    });
+  },
+  function(callback) {
+    async.map(paths, fs.stat, callback);
+  }
+], function(error, results) {
+  var stats = [results[0]].concat(results[1]);
+  // use the stats
+});           
+            </code></pre>
+            <p class="fragment">Victory!</p>
+        </section>
+
+        <section>
+            <p>That wasn't terribly elegant...</p>
+            <p>We can do better.</p>
+        </section>
+
+        <section>
+            <h3>Promises, baby</h3>
+            <p>A promise is...</p>
+            <ul class="fragment">
+                <li>An object!</li>
+                <li class="fragment">it has methods</li>
+                <li class="fragment">and properties</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Promise API</h3>
+            <ul>
+                <li>promise.then(success, error, progress)</li>
+                <li>promise.done(callback)</li>
+                <li>promise.fail(callback)</li>
+            </ul>
+            <p>These methods return new promises</p>
+            <p class="fragment">Note: There are many promise libraries out there. Some are better than others. See <a href="http://domenic.me/2012/10/14/youre-missing-the-point-of-promises/">this blog post</a> for more info.</p>
+        </section>
+
+        <section>
+            <p>A toy example...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var promise = fsStat('~/.profile-user');
+promise.then(function(contents){
+    // We have the contents!
+});
+            </code></pre>
+            <p class="fragment">Got it?</p>
+        </section>
+
+        <section>
+            <p>Let's revist our original example...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var fs = require('fs'),
+    Q  = require('q');
+
+var fsStat = Q.nfbind(fs.stat); // Create a promise version of fs.stat
+            </code></pre>
+
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'];
+
+var statsPromises = paths.map(fsStat);
+
+// We now have promise objects for all the stat operations
+            </code></pre>
+
+            <pre class="fragment"><code class="javascript" data-trim>
+// When all of the promises are resolved, use their results
+Q.all(statsPromises).then(function(results){
+    // use the results  
+});
+            </code></pre>
+            <p class="fragment">What about the size part?</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+statsPromises[0].then(function(stat){
+    // use the size
+});
+            </code></pre>
+        </section>
+
+        <section>
+            <p>All together now!</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'];
+
+var statsPromises = paths.map(fsStat);
+
+// We now have promise objects for all the stat operations
+
+// When all of the promises are resolved, use their results
+Q.all(statsPromises).then(function(results){
+    // use the results  
+});
+
+statsPromises[0].then(function(stat){
+    // use the size
+});
+            </code></pre>
+            <p class="fragment">Ahhh...that's better</p>
+        </section>
+
+        <section>
+            <p>What did we just do?</p>
+            <ul>
+                <li class="fragment">Hard --> Easy</li>
+                <li class="fragment">Avoided "callback hell"</li>
+                <li class="fragment">Set up <strong>relationships.</strong></li>
+                <li class="fragment">Let the computer handle control flow.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Halftime!</h3>
+            <p>Where are we?</p>
+            <ol>
+                <li class="fragment completed">Why do I care what promises are?</li>
+                <li class="fragment completed">Fine, what are they?</li>
+                <li class="fragment completed">Sweet! Show me how they work!</li>
+                <li class="fragment completed">OMG! Mind == Shattered</li>
+                <li class="fragment">There's more?! Deep breaths...</li>
+                <li class="fragment">Recovery Time (Q&A)</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Chaining Promises</h3>
+            <p>Remember that <code>promise.then()</code> returns a new promise:</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var anotherPromise = promise.then(function(){});
+            </code></pre>
+            <p class="fragment">When <code>anotherPromise</code> resolves depends on what the handler for <code>then</code> returns.</p>
+        </section>
+        
+        <section>
+            <p>Can return simple data...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+fsStat('file1.txt')
+.then(function(stat){
+    // called when fsStat completes
+    var transformedData;
+    // transform the data...
+    return transformedData;
+})
+.then(function(transformedData){
+    // called after previous handler returns with its results
+    console.log(transformedData);
+});
+            </code></pre>
+            <p class="fragment">The chained promise resolves immediately after handler returns.</p>
+        </section>
+
+        <section>
+            <p>Can return promises...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+fsExists('file1.txt')
+.then(function(exists) {
+    if(exists) {
+        return fsStat('file1.txt');
+    } else {
+        return fsWriteFile('file1.txt', "some data").then(function() {
+           return fsStat('file1.txt') 
+        });
+    }
+})
+.then(function(stat) {
+    // called only after all chained promises prior to this one resolve
+    console.log(stat);
+});
+            </code></pre>
+            <p class="fragment">Chained promise resolves after promises returned by previous handlers resolve.</p>
+        </section>
+
+        <section>
+            <p>Can aggregate promises...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var p1 = fsStat('file1.txt');
+var p2 = fsStat('file2.txt');
+
+Q.all(p1, p2).then(function(results){
+    var file1Stats = results.shift();
+    var file2Stats = results.shift();
+
+    // do something with both stats
+})
+            </code></pre>
+            <p class="fragment">Really useful pattern for rendering a view that might depend on two separate ajax fetches.</p>
+        </section>
+
+        <section>
+            <p>Can execute async tasks sequentially...</p>
+            <pre class="fragment"><code class="javascript" data-trim>
+var paths = ['file1.txt', 'file2.txt', 'file3.txt'],
+var allDone = paths.reduce(function(promise, currentPath){
+    return soFar.then(function(){
+        return fsUnlink(currentPath);
+    });
+}, Q());
+
+allDone.then(function() {
+    // all files have been unlinked
+})
+// Q() returns a pre-resolved promise to start the chain
+            </code></pre>
+        </section>
+
+        <section>
+            <p>We can all agree...</p>
+            <p class="fragment">that promises are sweet.</p>
+            <p class="fragment">There's a whole lot more to learn.</p>
+        </section>
+
+        <section>
+            <h3>Things we skipped:</h3>
+            <ul>
+                <li>Error handling</li>
+                <li>Deferreds</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Recovery Time (Q&A)</h3>
+        </section>
+
+        <section>
+            <h3>Bibliography</h3>
+            <ul>
+                <li><a href="http://blog.jcoglan.com/2013/03/30/callbacks-are-imperative-promises-are-functional-nodes-biggest-missed-opportunity/">Code Examples</a></li>
+                <li><a href="https://github.com/kriskowal/q">Q Library</a></li>
+            </ul>
+        </section>
+      </div>
+    </div>
+
+    <script src="components/reveal.js/lib/js/head.min.js"></script>
+    <script src="components/reveal.js/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+        { src: 'components/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+        { src: 'components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: 'components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: 'components/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        { src: 'components/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+        // { src: 'reveal/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        // { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
