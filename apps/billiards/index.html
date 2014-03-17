@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" class='compact'>
+<head>
+    <meta charset="UTF-8">
+    <title>Billiards</title>
+
+    <link rel="stylesheet" href="./app.min.b9091770.css"/>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+
+    <script src="./main.min.a7d43e38.js"></script>
+</head>
+<body>
+    <!-- fork me on github ribbon -->
+    <a href="https://github.com/brolfe/billiards"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://github-camo.global.ssl.fastly.net/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a> 
+    <div class="container" ng-controller="scenarioController">
+        <div class="row">
+            <div class="col-xs-12">
+                <h1>Billiards</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" ng-model="scenario" btn-radio="'brownian'">Brownian Motion</button>
+                    <button type="button" class="btn btn-primary" ng-model="scenario" btn-radio="'constantv'">Constant Velocity</button>
+                    <button type="button" class="btn btn-primary" ng-model="scenario" btn-radio="'gravity'">Gravity</button>
+                    <button type="button" class="btn btn-primary" ng-model="scenario" btn-radio="'bullet'">Bullet</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-8">
+                <bill-scenario scn-width="500" scn-height="300" scn-num-circles="15"></bill-scenario>
+            </div>
+            <div class="col-xs-4" id="controls">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" ng-model="started" btn-radio="true">Start</button>
+                    <button type="button" class="btn btn-danger"  ng-model="started" btn-radio="false">Stop</button>
+                </div>
+                <h3>Adjust Number of shapes:</h3>
+                <div ui-slider min="1" max="25" step="1" ng-model="numCircles" ng-disabled="!allowScenarioMods"></div>
+                <label class="checkbox">
+                    Use Random Sizes<input type="checkbox" ng-model="useRandomSize" ng-disabled="!allowScenarioMods"></input>
+                </label>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
